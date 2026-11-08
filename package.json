@@ -34,9 +34,9 @@
       "target": [
         "nsis"
       ],
-      "signAndEditExecutable": false,
+      "signAndEditExecutable": true,
       "icon": "build/icon.ico",
-      "artifactName": "Atombook-Setup-${version}.${ext}"
+      "artifactName": "AtomBook-Setup-${version}.${ext}"
     },
     "linux": {
       "target": [
