@@ -12,13 +12,19 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 function resolveFile(urlPath) {
-  let p = decodeURIComponent(urlPath.split('?')[0]);
-  if (p.endsWith('/')) p += 'index.html';
-  let full = path.normalize(path.join(OUT, p));
-  if (!full.startsWith(OUT)) return path.join(OUT, 'index.html'); // block path traversal
-  if (!fs.existsSync(full) && fs.existsSync(full + '.html')) full += '.html';
-  if (fs.existsSync(full) && fs.statSync(full).isDirectory()) full = path.join(full, 'index.html');
-  return fs.existsSync(full) ? full : path.join(OUT, '404.html');
+  let decoded;
+  try { decoded = decodeURIComponent(String(urlPath).split('?')[0]); }
+  catch { return path.join(OUT, '404.html'); }
+  const requested = decoded.endsWith('/') ? `${decoded}index.html` : decoded;
+  const full = path.resolve(OUT, `.${requested.startsWith('/') ? requested : `/${requested}`}`);
+  const relative = path.relative(OUT, full);
+  // path.relative is a path-boundary check; startsWith(OUT) alone also accepts
+  // sibling paths such as out-evil on some platforms.
+  if (relative.startsWith('..') || path.isAbsolute(relative)) return path.join(OUT, '404.html');
+  let candidate = full;
+  if (!fs.existsSync(candidate) && fs.existsSync(`${candidate}.html`)) candidate += '.html';
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) candidate = path.join(candidate, 'index.html');
+  return fs.existsSync(candidate) ? candidate : path.join(OUT, '404.html');
 }
 
 // Update check: looks at the latest GitHub Release and offers the installer for this platform.
@@ -48,7 +54,7 @@ function setupUpdates(win) {
   const check = async () => {
     try {
       const res = await net.fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
-        headers: { 'User-Agent': 'Atombook', Accept: 'application/vnd.github+json' },
+        headers: { 'User-Agent': 'AtomBook', Accept: 'application/vnd.github+json' },
       });
       if (!res.ok) return;
       const rel = await res.json();
@@ -60,7 +66,7 @@ function setupUpdates(win) {
         buttons: ['Download', 'Later'],
         defaultId: 0,
         cancelId: 1,
-        message: `Atombook ${String(rel.tag_name).replace(/^v/, '')} is available`,
+        message: `AtomBook ${String(rel.tag_name).replace(/^v/, '')} is available`,
         detail: 'Download the installer and run it to update. Your data is kept.',
       });
       if (r.response === 0) shell.openExternal(asset.browser_download_url);
@@ -78,16 +84,19 @@ function createWindow() {
     height: 820,
     minWidth: 900,
     minHeight: 600,
-    title: 'Atombook',
+    title: 'AtomBook',
     icon: path.join(__dirname, 'icon.png'),
     backgroundColor: '#f8fafc',
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   Menu.setApplicationMenu(null);
   setupUpdates(win);
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('app://billbook/')) event.preventDefault();
+  });
   win.loadURL('app://billbook/'); // host name kept so data saved by earlier builds stays visible
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:/.test(url)) shell.openExternal(url);
+    try { const parsed = new URL(url); if (parsed.protocol === 'https:' || parsed.protocol === 'http:') shell.openExternal(parsed.toString()); } catch { /* reject malformed external URLs */ }
     return { action: 'deny' };
   });
 }

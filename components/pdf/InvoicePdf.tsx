@@ -389,7 +389,7 @@ export function InvoicePdf({ doc, business, design, qr }: Props) {
   const size = design.paper === 'LETTER' ? 'LETTER' : design.paper;
 
   return (
-    <Document title={`${title} ${doc.number}`} author={business.name} creator="Atombook">
+    <Document title={`${title} ${doc.number}`} author={business.name} creator="AtomBook">
       <Page size={size} style={{ padding: 24, paddingBottom: 38, fontFamily: f.reg, fontSize: fs, color: '#111111' }}>
         {(design.watermark || doc.status === 'cancelled') && (
           <Text

@@ -1,0 +1,9 @@
+# Changelog
+
+All notable changes should be recorded here.
+
+## Unreleased
+- Hardened backup validation before database replacement.
+- Improved Electron file path boundary validation and navigation restrictions.
+- Standardised AtomBook product metadata and documentation.
+- Added contributor, security, architecture, database, GST and backup documentation.

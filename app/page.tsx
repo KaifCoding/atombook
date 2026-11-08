@@ -50,7 +50,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={business.name ? `Hello, ${business.name}` : 'Welcome to Atombook'} subtitle="Offline GST invoicing. Your data stays on this device." />
+      <PageHeader title={business.name ? `Hello, ${business.name}` : 'Welcome to AtomBook'} subtitle="Offline GST invoicing. Your data stays on this device." />
 
       {showOnboarding && (
         <section className="card border-brand-100 bg-brand-50">

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/icon-512.png" alt="Atombook" width="96" height="96">
+  <img src="assets/icon.svg" alt="AtomBook" width="96" height="96">
 </p>
 
-<h1 align="center">Atombook</h1>
+<h1 align="center">AtomBook</h1>
 
 <p align="center">
   Free GST invoicing and billing software for India. Works offline, keeps your data on your own device.
@@ -15,7 +15,7 @@
 
 ---
 
-Atombook is a small, open source billing app for shops, freelancers and small businesses. You set up your business once, add your products, and issue invoices, bills, quotations and other documents as PDFs. When the month ends, it produces the files you need for GST filing.
+AtomBook is a small, open source billing app for shops, freelancers and small businesses. You set up your business once, add your products, and issue invoices, bills, quotations and other documents as PDFs. When the month ends, it produces the files you need for GST filing.
 
 There is no account, no subscription and no server. Everything is stored on the device you install it on.
 
@@ -43,9 +43,9 @@ Get the latest build from the [Releases page](../../releases/latest).
 
 | Platform | File | Notes |
 | --- | --- | --- |
-| Android 7+ | `Atombook-x.y.z.apk` | Sideload install |
-| Windows 10 / 11 | `Atombook-Setup-x.y.z.exe` | Installer |
-| Linux (Debian, Ubuntu and derivatives) | `Atombook-x.y.z-amd64.deb` | Installed with `apt` |
+| Android 7+ | `AtomBook-x.y.z.apk` | Sideload install |
+| Windows 10 / 11 | `AtomBook-Setup-x.y.z.exe` | Installer |
+| Linux (Debian, Ubuntu and derivatives) | `AtomBook-x.y.z-amd64.deb` | Installed with `apt` |
 
 ### Installing
 
@@ -56,7 +56,7 @@ Get the latest build from the [Releases page](../../releases/latest).
 **Linux.**
 
 ```sh
-sudo apt install ./Atombook-x.y.z-amd64.deb
+sudo apt install ./AtomBook-x.y.z-amd64.deb
 ```
 
 ### Updates
@@ -74,13 +74,13 @@ The app looks for a newer release when it starts. On Windows and Linux it shows 
 
 ## Your data
 
-Atombook stores everything in the browser database of the app itself (IndexedDB). Nothing is sent to any server, and the app makes no network requests except the update check described above.
+AtomBook stores everything in the browser database of the app itself (IndexedDB). Nothing is sent to any server, and the app makes no network requests except the update check described above.
 
 That also means the data lives only on that device. If you uninstall the app, clear its storage or lose the phone, the data goes with it. Use **Settings > Backup & restore** regularly and keep the file somewhere safe.
 
 ## About GST filing
 
-Atombook prepares the data; it does not file anything for you. GST rules and the portal's file formats change from time to time. Before uploading a return, check the figures against your books and, if you have one, ask your accountant to review them. The B2C large invoice limit (Rs 1 lakh for inter-state supplies) is editable in Settings in case the rule changes again.
+AtomBook prepares the data; it does not file anything for you. GST rules and the portal's file formats change from time to time. Before uploading a return, check the figures against your books and, if you have one, ask your accountant to review them. The B2C large invoice limit (Rs 1 lakh for inter-state supplies) is editable in Settings in case the rule changes again.
 
 This software is provided as is, under the MIT license, and is not tax advice.
 
@@ -148,7 +148,7 @@ Bug reports and pull requests are welcome. For anything larger than a small fix,
 
 ## License
 
-Atombook is released under the [MIT License](LICENSE).
+AtomBook is released under the [MIT License](LICENSE).
 
 ## Author
 

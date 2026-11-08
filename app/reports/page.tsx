@@ -156,7 +156,7 @@ export default function ReportsPage() {
       </section>
 
       <p className="text-xs text-gray-400">
-        Atombook prepares data from the documents you create here. Verify it against your books, and validate the JSON in the GST portal / offline tool before filing. GST formats and thresholds can change.
+        AtomBook prepares data from the documents you create here. Verify it against your books, and validate the JSON in the GST portal / offline tool before filing. GST formats and thresholds can change.
       </p>
     </div>
   );

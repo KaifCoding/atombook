@@ -54,7 +54,7 @@ jobs:
             exit 1
           fi
 
-      - run: npm install
+      - run: npm ci
       - run: npm run build
       - run: npx cap sync android
 
@@ -107,7 +107,7 @@ jobs:
             ~/AppData/Local/electron-builder/Cache
           key: electron-win-${{ hashFiles('package.json') }}
 
-      - run: npm install
+      - run: npm ci
       - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
       - name: Record repository for update checks
         run: |
@@ -151,7 +151,7 @@ jobs:
             ~/.cache/electron-builder
           key: electron-linux-${{ hashFiles('package.json') }}
 
-      - run: npm install
+      - run: npm ci
       - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
       - name: Record repository for update checks
         run: |
@@ -192,5 +192,6 @@ jobs:
       - name: Publish to one release
         run: |
           ls -la release-files
-          gh release create "$TAG" --title "Atombook $TAG" --generate-notes --latest || true
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "AtomBook $TAG" --generate-notes --latest
+          (cd release-files && sha256sum * > SHA256SUMS.txt)
           gh release upload "$TAG" release-files/* --clobber

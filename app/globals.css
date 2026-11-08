@@ -2,8 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
-html, body { background: #f6f7f9; color: #111827; }
+:root { color-scheme: light; --ab-canvas: #f5f7fb; --ab-ink: #172033; --ab-muted: #667085; --ab-border: #e4e8ef; }
+html, body { background: var(--ab-canvas); color: var(--ab-ink); }
+::selection { background: #dbeafe; color: #1e3a8a; }
+:focus-visible { outline: 3px solid rgba(37, 99, 235, .35); outline-offset: 2px; }
+button, input, select, textarea { font: inherit; }
+@media print { html, body { background: #fff !important; } }
 body { font-family: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
 
 @layer components {

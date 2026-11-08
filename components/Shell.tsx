@@ -27,7 +27,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
         <div className="px-5 py-5">
-          <div className="text-lg font-bold text-brand-600">Atombook</div>
+          <div className="text-lg font-bold text-brand-600">AtomBook</div>
           <div className="truncate text-xs text-gray-500">{business?.name || 'Set up your business'}</div>
         </div>
         <div className="px-3">
@@ -50,7 +50,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="px-5 py-4 text-[11px] text-gray-400">
           Data stays on this device. Back up from Settings.
-          {APP_VERSION && <div className="mt-1">Atombook v{APP_VERSION}</div>}
+          {APP_VERSION && <div className="mt-1">AtomBook v{APP_VERSION}</div>}
         </div>
       </aside>
 

@@ -3,9 +3,9 @@ import './globals.css';
 import { Shell } from '@/components/Shell';
 
 export const metadata: Metadata = {
-  title: 'Atombook – GST Invoice & Billing',
+  title: { default: 'AtomBook – GST Invoicing & Business', template: '%s | AtomBook' },
   icons: { icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }, { url: '/favicon-64.png', sizes: '64x64', type: 'image/png' }], apple: '/icon-512.png' },
-  description: 'Offline GST invoice, bill of supply, quotation and billing app.',
+  description: 'Professional offline-first GST invoicing, billing and business documents. Your business data stays on your device.',
 };
 
 export const viewport: Viewport = {

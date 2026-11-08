@@ -136,22 +136,88 @@ export async function exportBackup(): Promise<BackupFile> {
   };
 }
 
+type BackupRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is BackupRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validateBackup(input: unknown): asserts input is BackupFile {
+  if (!isRecord(input) || input.app !== 'billbook') {
+    throw new Error('This is not an AtomBook backup file.');
+  }
+  if (input.version !== 1) throw new Error(`Unsupported backup version: ${String(input.version)}.`);
+  if (typeof input.exportedAt !== 'string' || Number.isNaN(Date.parse(input.exportedAt))) {
+    throw new Error('The backup export date is missing or invalid.');
+  }
+  for (const key of ['customers', 'items', 'docs', 'counters'] as const) {
+    if (!Array.isArray(input[key])) throw new Error(`The backup is incomplete: ${key} must be an array.`);
+  }
+  for (const key of ['business', 'design'] as const) {
+    if (input[key] !== undefined && input[key] !== null && !isRecord(input[key])) {
+      throw new Error(`The backup contains an invalid ${key} record.`);
+    }
+  }
+  const validateIds = (records: unknown[], name: string) => {
+    const seen = new Set<number>();
+    for (const [index, record] of records.entries()) {
+      if (!isRecord(record) || !Number.isSafeInteger(record.id) || Number(record.id) <= 0) {
+        throw new Error(`Invalid ${name} record at position ${index + 1}: a positive numeric id is required.`);
+      }
+      const id = Number(record.id);
+      if (seen.has(id)) throw new Error(`Duplicate ${name} id ${id} in backup.`);
+      seen.add(id);
+    }
+  };
+  validateIds(input.customers as unknown[], 'customer');
+  validateIds(input.items as unknown[], 'item');
+  validateIds(input.docs as unknown[], 'document');
+  const counterKeys = new Set<string>();
+  for (const [index, counter] of (input.counters as unknown[]).entries()) {
+    if (!isRecord(counter) || typeof counter.key !== 'string' || !counter.key ||
+        !Number.isSafeInteger(counter.last) || Number(counter.last) < 0) {
+      throw new Error(`Invalid numbering counter at position ${index + 1}.`);
+    }
+    if (counterKeys.has(counter.key)) throw new Error(`Duplicate numbering counter: ${counter.key}.`);
+    counterKeys.add(counter.key);
+  }
+  const docNumbers = new Set<string>();
+  for (const [index, doc] of (input.docs as unknown[]).entries()) {
+    if (!isRecord(doc) || typeof doc.type !== 'string' || typeof doc.number !== 'string' ||
+        typeof doc.date !== 'string' || typeof doc.fy !== 'string' ||
+        !Number.isSafeInteger(doc.seq) || Number(doc.seq) <= 0) {
+      throw new Error(`Invalid document at position ${index + 1}: required numbering/date fields are missing.`);
+    }
+    const key = `${doc.type}:${doc.number}`;
+    if (docNumbers.has(key)) throw new Error(`Duplicate document number ${doc.number} for ${doc.type}.`);
+    docNumbers.add(key);
+  }
+}
+
+/**
+ * Validate the complete payload before touching IndexedDB. Dexie's transaction
+ * makes the replacement atomic: a failed write aborts and retains the old data.
+ * The v1 export format and the legacy database name intentionally remain stable.
+ */
 export async function importBackup(data: BackupFile): Promise<void> {
-  if (!data || data.app !== 'billbook') throw new Error('This is not an Atombook backup file.');
+  validateBackup(data);
   await db.transaction('rw', [db.business, db.design, db.customers, db.items, db.docs, db.counters], async () => {
     await Promise.all([
-      db.business.clear(),
-      db.design.clear(),
-      db.customers.clear(),
-      db.items.clear(),
-      db.docs.clear(),
-      db.counters.clear(),
+      db.business.clear(), db.design.clear(), db.customers.clear(),
+      db.items.clear(), db.docs.clear(), db.counters.clear(),
     ]);
     if (data.business) await db.business.put(data.business);
     if (data.design) await db.design.put(data.design);
-    await db.customers.bulkPut(data.customers || []);
-    await db.items.bulkPut(data.items || []);
-    await db.docs.bulkPut(data.docs || []);
-    await db.counters.bulkPut(data.counters || []);
+    await db.customers.bulkPut(data.customers);
+    await db.items.bulkPut(data.items);
+    await db.docs.bulkPut(data.docs);
+    await db.counters.bulkPut(data.counters);
   });
+  const [customers, items, docs, counters] = await Promise.all([
+    db.customers.count(), db.items.count(), db.docs.count(), db.counters.count(),
+  ]);
+  if (customers !== data.customers.length || items !== data.items.length ||
+      docs !== data.docs.length || counters !== data.counters.length) {
+    throw new Error('Restore verification failed. Please restore your pre-restore backup.');
+  }
 }
