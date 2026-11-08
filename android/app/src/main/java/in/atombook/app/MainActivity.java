@@ -1,4 +1,4 @@
-package in.atombook.app;
+package in.atomprod.atombook;
 
 import com.getcapacitor.BridgeActivity;
 

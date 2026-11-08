@@ -39,7 +39,6 @@
     },
     "linux": {
       "target": [
-        "AppImage",
         "deb"
       ],
       "category": "Office",
@@ -57,12 +56,10 @@
     "mac": {
       "icon": "build/icon.png"
     },
-    "appImage": {
-      "artifactName": "Atombook-${version}.${ext}"
-    },
     "deb": {
       "artifactName": "Atombook-${version}-${arch}.${ext}"
-    }
+    },
+    "copyright": "Copyright © 2026 Mohammad Kaif"
   },
   "dependencies": {
     "@capacitor/browser": "^8.0.5",
@@ -70,7 +67,6 @@
     "@react-pdf/renderer": "^4.9.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
-    "electron-updater": "^6.8.11",
     "lucide-react": "^1.65.0",
     "next": "^15.5.28",
     "pdfjs-dist": "^6.4.299",
@@ -101,5 +97,6 @@
     "name": "Mohammad Kaif",
     "email": "kaif@atomprod.in"
   },
-  "homepage": "https://localhost"
+  "homepage": "https://localhost",
+  "license": "MIT"
 }

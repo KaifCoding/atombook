@@ -21,31 +21,55 @@ function resolveFile(urlPath) {
   return fs.existsSync(full) ? full : path.join(OUT, '404.html');
 }
 
-// Auto-update from the GitHub Release (Windows installer and Linux AppImage).
-// Skipped in development and for the .deb (which cannot self-update).
+// Update check: looks at the latest GitHub Release and offers the installer for this platform.
+// electron/release.json ({ "repo": "owner/name" }) is written by the release workflow;
+// it is absent in development, so nothing is checked there.
 function setupUpdates(win) {
   if (!app.isPackaged) return;
+  let repo;
   try {
-    const { autoUpdater } = require('electron-updater');
-    autoUpdater.autoDownload = true;
-    autoUpdater.on('update-downloaded', (info) => {
-      dialog
-        .showMessageBox(win, {
-          type: 'info',
-          buttons: ['Restart now', 'Later'],
-          defaultId: 0,
-          message: `Atombook ${info.version} is ready to install`,
-          detail: 'Restart to finish updating. Your data is kept.',
-        })
-        .then((r) => r.response === 0 && autoUpdater.quitAndInstall());
-    });
-    autoUpdater.on('error', (e) => console.error('update check failed:', e && e.message));
-    const check = () => autoUpdater.checkForUpdates().catch(() => {});
-    check();
-    setInterval(check, 6 * 60 * 60 * 1000);
-  } catch (e) {
-    console.error('updater unavailable:', e && e.message);
+    repo = require('./release.json').repo;
+  } catch {
+    return;
   }
+  const ext = process.platform === 'win32' ? '.exe' : process.platform === 'linux' ? '.deb' : null;
+  if (!repo || !ext) return;
+
+  const parts = (v) => String(v).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const isNewer = (a, b) => {
+    const x = parts(a), y = parts(b);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) {
+      if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+    }
+    return false;
+  };
+
+  let offered = '';
+  const check = async () => {
+    try {
+      const res = await net.fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+        headers: { 'User-Agent': 'Atombook', Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) return;
+      const rel = await res.json();
+      const asset = (rel.assets || []).find((x) => x.name.endsWith(ext));
+      if (!asset || !isNewer(rel.tag_name, app.getVersion()) || offered === rel.tag_name) return;
+      offered = rel.tag_name;
+      const r = await dialog.showMessageBox(win, {
+        type: 'info',
+        buttons: ['Download', 'Later'],
+        defaultId: 0,
+        cancelId: 1,
+        message: `Atombook ${String(rel.tag_name).replace(/^v/, '')} is available`,
+        detail: 'Download the installer and run it to update. Your data is kept.',
+      });
+      if (r.response === 0) shell.openExternal(asset.browser_download_url);
+    } catch {
+      /* offline or rate limited: try again later */
+    }
+  };
+  check();
+  setInterval(check, 6 * 60 * 60 * 1000);
 }
 
 function createWindow() {

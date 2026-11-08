@@ -1,7 +1,7 @@
-name: Release (Android + Windows + Linux)
+name: Release
 
-# Change the number in version.json and push to main: all three apps are built
-# and attached to ONE GitHub Release (tag v<version>) at the same time.
+# Change the number in version.json and push to main: the APK, EXE and DEB are
+# built and attached to one GitHub Release (tag v<version>).
 on:
   push:
     branches: [main, master]
@@ -109,15 +109,15 @@ jobs:
 
       - run: npm install
       - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
+      - name: Record repository for update checks
+        run: |
+          echo "{ \"repo\": \"$GITHUB_REPOSITORY\" }" > electron/release.json
       - run: npm run build
 
       - name: Package installer (retries if a download fails)
         run: |
           for i in 1 2 3 4; do
-            if npx electron-builder --win --publish never \
-                 -c.publish.provider=github \
-                 -c.publish.owner=${{ github.repository_owner }} \
-                 -c.publish.repo=${{ github.event.repository.name }}; then
+            if npx electron-builder --win --publish never; then
               exit 0
             fi
             echo "Attempt $i failed, retrying in 30s..."; sleep 30
@@ -130,8 +130,6 @@ jobs:
           name: windows
           path: |
             dist/Atombook-Setup-*.exe
-            dist/Atombook-Setup-*.exe.blockmap
-            dist/latest.yml
           if-no-files-found: error
 
   linux:
@@ -155,15 +153,15 @@ jobs:
 
       - run: npm install
       - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
+      - name: Record repository for update checks
+        run: |
+          echo "{ \"repo\": \"$GITHUB_REPOSITORY\" }" > electron/release.json
       - run: npm run build
 
-      - name: Package AppImage and deb (retries if a download fails)
+      - name: Package deb (retries if a download fails)
         run: |
           for i in 1 2 3 4; do
-            if npx electron-builder --linux --publish never \
-                 -c.publish.provider=github \
-                 -c.publish.owner=${{ github.repository_owner }} \
-                 -c.publish.repo=${{ github.event.repository.name }}; then
+            if npx electron-builder --linux --publish never; then
               exit 0
             fi
             echo "Attempt $i failed, retrying in 30s..."; sleep 30
@@ -175,9 +173,7 @@ jobs:
         with:
           name: linux
           path: |
-            dist/Atombook-*.AppImage
             dist/Atombook-*.deb
-            dist/latest-linux.yml
           if-no-files-found: error
 
   release:
@@ -193,13 +189,8 @@ jobs:
           path: release-files
           merge-multiple: true
 
-      - name: Publish everything to one release
+      - name: Publish to one release
         run: |
           ls -la release-files
-          gh release create "$TAG" --title "Atombook $TAG" --latest \
-            --notes "Android: Atombook-*.apk
-          Windows: Atombook-Setup-*.exe
-          Linux: Atombook-*.AppImage (or .deb)
-
-          Installed apps update themselves: Windows and Linux (AppImage) restart into the new version, Android shows a banner with the new APK." || true
+          gh release create "$TAG" --title "Atombook $TAG" --generate-notes --latest || true
           gh release upload "$TAG" release-files/* --clobber

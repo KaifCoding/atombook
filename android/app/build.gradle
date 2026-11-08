@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "in.atombook.app"
+    namespace = "in.atomprod.atombook"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "in.atombook.app"
+        applicationId "in.atomprod.atombook"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
