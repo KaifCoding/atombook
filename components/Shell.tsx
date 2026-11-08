@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { BarChart3, FileText, LayoutDashboard, Package, Palette, Plus, Settings, Users } from 'lucide-react';
 import { useBusiness } from '@/lib/hooks';
 import { ToastHost } from '@/components/ui';
+import { APP_VERSION, UpdateBanner } from '@/components/UpdateBanner';
 
 const NAV = [
   { href: '/', label: 'Home', icon: LayoutDashboard },
@@ -47,7 +48,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="px-5 py-4 text-[11px] text-gray-400">Data stays on this device. Back up from Settings.</div>
+        <div className="px-5 py-4 text-[11px] text-gray-400">
+          Data stays on this device. Back up from Settings.
+          {APP_VERSION && <div className="mt-1">Atombook v{APP_VERSION}</div>}
+        </div>
       </aside>
 
       <main className="min-w-0 flex-1 px-4 pb-24 pt-5 md:px-8 md:pb-10">
@@ -55,6 +59,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </main>
 
       <ToastHost />
+      <UpdateBanner />
 
       {/* mobile bottom bar */}
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-gray-200 bg-white md:hidden">

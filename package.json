@@ -22,7 +22,7 @@
     "electron:linux:dir": "npm run build && electron-builder --linux dir"
   },
   "build": {
-    "appId": "in.atombook.app",
+    "appId": "in.atomprod.atombook",
     "productName": "Atombook",
     "files": [
       "out/**",
@@ -34,7 +34,8 @@
         "nsis"
       ],
       "signAndEditExecutable": false,
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "Atombook-Setup-${version}.${ext}"
     },
     "linux": {
       "target": [
@@ -50,17 +51,26 @@
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "shortcutName": "Atombook"
+      "shortcutName": "Atombook",
+      "artifactName": "Atombook-Setup-${version}.${ext}"
     },
     "mac": {
       "icon": "build/icon.png"
+    },
+    "appImage": {
+      "artifactName": "Atombook-${version}.${ext}"
+    },
+    "deb": {
+      "artifactName": "Atombook-${version}-${arch}.${ext}"
     }
   },
   "dependencies": {
+    "@capacitor/browser": "^8.0.5",
     "@fontsource/noto-sans": "^5.3.0",
     "@react-pdf/renderer": "^4.9.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
+    "electron-updater": "^6.8.11",
     "lucide-react": "^1.65.0",
     "next": "^15.5.28",
     "pdfjs-dist": "^6.4.299",
@@ -88,8 +98,8 @@
     "typescript": "5.9"
   },
   "author": {
-    "name": "Atombook",
-    "email": "atombook@example.com"
+    "name": "Mohammad Kaif",
+    "email": "kaif@atomprod.in"
   },
   "homepage": "https://localhost"
 }

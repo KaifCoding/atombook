@@ -51,28 +51,27 @@ npm run electron:win
 The variables only last for that PowerShell window. If it still fails, try a mobile hotspot, or turn off VPN/proxy and set DNS to 8.8.8.8, then run the same commands.
 The finished installer is in `dist\`.
 
-## Build the Android APK without Android Studio
-**Option A, free cloud build (easiest):**
-1. Create a free GitHub account and a new repository, then upload this whole folder (without `node_modules`).
-2. Open the repository's **Actions** tab, choose **Build Atombook APK**, press **Run workflow**.
-3. After 5 to 8 minutes open the finished run and download **Atombook-apk**. Unzip it to get `app-debug.apk`.
-4. Copy it to your phone, open it, and allow "Install unknown apps" when asked.
+## Releasing (one workflow, one release page)
+Pushing a new number in `version.json` to `main` builds **Android (signed APK), Windows (installer) and Linux (AppImage + deb)** in GitHub Actions and attaches all of them, plus the update files, to one release `v<version>`. You can also run it by hand: **Actions > Release > Run workflow**.
 
-**Option B, on your own PC, command line only:** install JDK 17 and the Android "command-line tools", then
-```
-npm run build
-npx cap sync android
-cd android
-gradlew assembleDebug
-```
-The APK is `android\app\build\outputs\apk\debug\app-debug.apk`. This downloads from Google and Maven servers, so it needs open internet.
+### One-time setup
+1. Make the repository public, so phones can check for updates without a login.
+2. Create the Android signing key once and **keep it safe**; every release must use the same key or phones refuse to update.
+   ```
+   keytool -genkeypair -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias atombook
+   ```
+   Then in PowerShell copy it as text: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("release-key.jks")) | Set-Clipboard`
+3. In the repository: **Settings > Secrets and variables > Actions > New repository secret**, add:
+   - `ANDROID_KEYSTORE_BASE64` (the copied text)
+   - `ANDROID_KEYSTORE_PASSWORD`
+   - `ANDROID_KEY_PASSWORD`
+   - `ANDROID_KEY_ALIAS` (`atombook`)
+4. **Settings > Actions > General > Workflow permissions**: choose *Read and write permissions*.
 
-The debug APK is fine for your own phone. For the Play Store you need a signed release build.
+### Every release
+Edit `version.json` (for example `{ "version": "1.0.1" }`), commit, push. The release appears after about 10 minutes.
 
-## Build Windows and Linux installers in the cloud
-The `.github/workflows` folder has one workflow per platform: **Build Atombook Windows installer**, **Build Atombook Linux packages** and **Build Atombook APK**.
-Upload the project to a GitHub repository, open **Actions**, pick a workflow and press **Run workflow**. When it finishes, download the result from the **Artifacts** section of that run:
-- Windows: `Atombook-windows` contains the setup `.exe`.
-- Linux: `Atombook-linux` contains the `.AppImage` and `.deb`.
-- Android: `Atombook-apk` contains `app-debug.apk`.
-Change the author email in `package.json` to your own before publishing the `.deb`.
+### How updates reach users
+- **Windows** (installer) and **Linux** (AppImage): the app checks the release when it starts, downloads the new version and asks to restart. The `.deb` does not self-update.
+- **Android**: the app checks the release on start and shows an **Update** banner that opens the new APK. The user taps it and installs over the old app (Android may ask once to allow installs from the browser). Data is kept.
+- The first install of each platform is manual; after that the app tells you.

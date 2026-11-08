@@ -1,0 +1,205 @@
+name: Release (Android + Windows + Linux)
+
+# Change the number in version.json and push to main: all three apps are built
+# and attached to ONE GitHub Release (tag v<version>) at the same time.
+on:
+  push:
+    branches: [main, master]
+    paths: ['version.json']
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: 22        # Capacitor 8 needs Node >= 22
+
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          VERSION=$(node -p "require('./version.json').version.replace(/^v/, '')")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing v$VERSION"
+
+  android:
+    needs: meta
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}' }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+
+      - name: Check signing secrets
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KP: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$KP" ] || [ -z "$KA" ]; then
+            echo "::error::Add the ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD and ANDROID_KEY_ALIAS secrets (see README). The same key must be used for every release or phones cannot update."
+            exit 1
+          fi
+
+      - run: npm install
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Version and signing config
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          node scripts/patch-android.js
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release-key.jks
+          cat > android/key.properties <<PROPS
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=release-key.jks
+          PROPS
+
+      - name: Build signed release APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+          mv app/build/outputs/apk/release/app-release.apk "../Atombook-${APP_VERSION}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: Atombook-*.apk
+          if-no-files-found: error
+
+  windows:
+    needs: meta
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}' }
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-win-${{ hashFiles('package.json') }}
+
+      - run: npm install
+      - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
+      - run: npm run build
+
+      - name: Package installer (retries if a download fails)
+        run: |
+          for i in 1 2 3 4; do
+            if npx electron-builder --win --publish never \
+                 -c.publish.provider=github \
+                 -c.publish.owner=${{ github.repository_owner }} \
+                 -c.publish.repo=${{ github.event.repository.name }}; then
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 30s..."; sleep 30
+          done
+          exit 1
+
+      - run: ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/Atombook-Setup-*.exe
+            dist/Atombook-Setup-*.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+  linux:
+    needs: meta
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_APP_VERSION: ${{ needs.meta.outputs.version }}
+      NEXT_PUBLIC_GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}' }
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: electron-linux-${{ hashFiles('package.json') }}
+
+      - run: npm install
+      - run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
+      - run: npm run build
+
+      - name: Package AppImage and deb (retries if a download fails)
+        run: |
+          for i in 1 2 3 4; do
+            if npx electron-builder --linux --publish never \
+                 -c.publish.provider=github \
+                 -c.publish.owner=${{ github.repository_owner }} \
+                 -c.publish.repo=${{ github.event.repository.name }}; then
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 30s..."; sleep 30
+          done
+          exit 1
+
+      - run: ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/Atombook-*.AppImage
+            dist/Atombook-*.deb
+            dist/latest-linux.yml
+          if-no-files-found: error
+
+  release:
+    needs: [meta, android, windows, linux]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ needs.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-files
+          merge-multiple: true
+
+      - name: Publish everything to one release
+        run: |
+          ls -la release-files
+          gh release create "$TAG" --title "Atombook $TAG" --latest \
+            --notes "Android: Atombook-*.apk
+          Windows: Atombook-Setup-*.exe
+          Linux: Atombook-*.AppImage (or .deb)
+
+          Installed apps update themselves: Windows and Linux (AppImage) restart into the new version, Android shows a banner with the new APK." || true
+          gh release upload "$TAG" release-files/* --clobber

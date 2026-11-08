@@ -5,3 +5,4 @@ dist
 android/build
 *.tsbuildinfo
 .tmp
+release-key.jks
