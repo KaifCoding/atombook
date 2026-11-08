@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Atombook</string>
+    <string name="title_activity_main">Atombook</string>
+    <string name="package_name">in.atombook.app</string>
+    <string name="custom_url_scheme">in.atombook.app</string>
+</resources>

@@ -1,0 +1,93 @@
+import type { Business, DesignConfig, DocType, NumberingConfig } from './types';
+import { DOC_TYPES } from './types';
+
+const numbering = (): Record<DocType, NumberingConfig> => {
+  const out = {} as Record<DocType, NumberingConfig>;
+  (Object.keys(DOC_TYPES) as DocType[]).forEach((t) => {
+    out[t] = { prefix: DOC_TYPES[t].defaultPrefix, padding: 4, start: 1 };
+  });
+  return out;
+};
+
+export const defaultBusiness = (): Business => ({
+  id: 1,
+  name: '',
+  tagline: '',
+  address: '',
+  city: '',
+  pincode: '',
+  stateCode: '',
+  gstin: '',
+  pan: '',
+  email: '',
+  phone: '',
+  website: '',
+  taxScheme: 'regular',
+  logo: '',
+  signature: '',
+  seal: '',
+  signatoryName: '',
+  signatoryDesignation: 'Authorised Signatory',
+  numbering: numbering(),
+  bank: { accountName: '', bankName: '', accountNumber: '', ifsc: '', branch: '', upiId: '' },
+  customQr: '',
+  qrMode: 'upi',
+  defaultTerms: '1. Goods once sold will not be taken back.\n2. Payment due within the period mentioned.\n3. Subject to local jurisdiction.',
+  defaultNotes: '',
+  b2clThreshold: 100000,
+  aggregateTurnoverAbove5Cr: false,
+  monthlyFiler: true,
+});
+
+export const defaultDesign = (): DesignConfig => ({
+  id: 1,
+  template: 'classic',
+  accent: '#1d4ed8',
+  fontFamily: 'NotoSans',
+  fontSize: 9,
+  paper: 'A4',
+  logoPosition: 'left',
+  logoSize: 56,
+  showLogo: true,
+  showTagline: true,
+  showGstin: true,
+  showHsn: true,
+  showUnit: true,
+  showDiscount: true,
+  showGstRate: true,
+  showSerial: true,
+  showAmountInWords: true,
+  showBank: true,
+  showQr: true,
+  showSignature: true,
+  showSeal: true,
+  sealPosition: 'right',
+  sealSize: 78,
+  signatureSize: 80,
+  showTerms: true,
+  showNotes: true,
+  showTaxSummary: true,
+  showPlaceOfSupply: true,
+  showPageNumbers: true,
+  headerNote: '',
+  footerText: 'This is a computer generated document.',
+  labels: {
+    tax_invoice: 'TAX INVOICE',
+    bill_of_supply: 'BILL OF SUPPLY',
+    quotation: 'QUOTATION',
+    normal_bill: 'BILL',
+    credit_note: 'CREDIT NOTE',
+    debit_note: 'DEBIT NOTE',
+    proforma_invoice: 'PROFORMA INVOICE',
+    delivery_challan: 'DELIVERY CHALLAN',
+    purchase_order: 'PURCHASE ORDER',
+    payment_receipt: 'PAYMENT RECEIPT',
+    billTo: 'Bill To',
+    signatory: 'For',
+    thanks: 'Thank you for your business!',
+  },
+  tableHeaderBg: '#1d4ed8',
+  tableHeaderText: '#ffffff',
+  zebra: true,
+  watermark: '',
+});
