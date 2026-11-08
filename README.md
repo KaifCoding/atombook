@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.svg" alt="Atombook" width="96" height="96">
+  <img src="assets/icon-512.png" alt="Atombook" width="96" height="96">
 </p>
 
 <h1 align="center">Atombook</h1>
