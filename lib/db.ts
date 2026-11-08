@@ -1,8 +1,8 @@
 import Dexie, { type Table } from 'dexie';
-import type { Business, Customer, DesignConfig, Doc, DocType, Item, NumberingConfig } from './types';
-import { DOC_TYPES } from './types';
 import { defaultBusiness, defaultDesign } from './defaults';
 import { fyCode } from './gst';
+import type { Business, Customer, DesignConfig, Doc, DocType, Item, NumberingConfig } from './types';
+import { DOC_TYPES } from './types';
 
 interface Counter {
   key: string; // `${type}:${fy}`
@@ -106,6 +106,15 @@ export async function deleteDocIfSafe(doc: Doc): Promise<boolean> {
   if (DOC_TYPES[doc.type].gstReturn) return false;
   if (doc.id != null) await db.docs.delete(doc.id);
   return true;
+}
+/**
+ * Wipes every billing document and the numbering counters, so numbering restarts.
+ * Business profile, design, customers and items are kept.
+ */
+export async function deleteAllBillingData(): Promise<void> {
+  await db.transaction('rw', db.docs, db.counters, async () => {
+    await Promise.all([db.docs.clear(), db.counters.clear()]);
+  });
 }
 
 /* ---------------- backup / restore ---------------- */

@@ -1,11 +1,12 @@
 'use client';
 
+import { BarChart3, FileText, LayoutDashboard, Package, Palette, Plus, Settings, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, FileText, LayoutDashboard, Package, Palette, Plus, Settings, Users } from 'lucide-react';
-import { useBusiness } from '@/lib/hooks';
-import { ToastHost } from '@/components/ui';
 import { APP_VERSION, UpdateBanner } from '@/components/UpdateBanner';
+import { ToastHost } from '@/components/ui';
+import { useBusiness } from '@/lib/hooks';
 
 const NAV = [
   { href: '/', label: 'Home', icon: LayoutDashboard },
@@ -27,8 +28,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
         <div className="px-5 py-5">
-          <div className="text-lg font-bold text-brand-600">AtomBook</div>
-          <div className="truncate text-xs text-gray-500">{business?.name || 'Set up your business'}</div>
+          <div className="flex items-center gap-2">
+          <Image src="/icon-512.png" alt="AtomBook" className='rounded-lg' width={50} height={50} />
+          <div className="text-lg font-bold text-brand-600">AtomBook <div className="truncate text-xs font-normal text-gray-500">By Atomprod</div></div></div>
+          
         </div>
         <div className="px-3">
           <Link href="/documents/edit/?type=tax_invoice" className="btn-primary w-full">
