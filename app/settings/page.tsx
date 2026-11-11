@@ -19,6 +19,7 @@ import {
   importBackup,
   saveBusiness,
 } from "@/lib/db";
+import { SyncPanel } from "@/components/SyncUi";
 import { saveJson } from "@/lib/files";
 import {
   fyCode,
@@ -42,9 +43,10 @@ export default function SettingsPage() {
   const [wipeOpen, setWipeOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
 
+  // Show data that arrives from another device (Google Drive sync), unless the user is mid-edit.
   useEffect(() => {
-    if (saved && !b) setB(saved);
-  }, [saved, b]);
+    if (saved && (!b || (!dirty && saved.updatedAt !== b.updatedAt))) setB(saved);
+  }, [saved, b, dirty]);
 
   useEffect(() => {
     if (!b || !b.bank.upiId) return setUpiQr("");
@@ -554,11 +556,14 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <SyncPanel />
+
       <section className="card">
         <h2 className="mb-1 font-semibold">Backup &amp; restore</h2>
         <p className="mb-3 text-xs text-gray-500">
-          All data lives only on this device. Create a backup file regularly and
-          keep a copy somewhere safe (Drive, pen drive).
+          Your data is stored on this device (and, if you turn on Google Drive
+          sync, in your own Drive). Create a backup file regularly and keep a
+          copy somewhere safe (Drive, pen drive).
         </p>
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" onClick={doBackup}>

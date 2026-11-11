@@ -94,7 +94,7 @@ export default function Dashboard() {
         title={
           business.name ? `Hello, ${business.name}` : "Welcome to AtomBook"
         }
-        subtitle="Offline GST invoicing. Your data stays on this device."
+        subtitle="GST invoicing that works offline. Your data is yours: on your device, and in your own Google Drive if you turn on sync."
       />
 
       {showOnboarding && (

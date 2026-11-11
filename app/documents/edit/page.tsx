@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Download, Eye, Plus, Save, Trash2 } from 'lucide-react';
 import { Field, Modal, NumInput, PageHeader, StateSelect, toast } from '@/components/ui';
 import { PdfPreview } from '@/components/PdfPreview';
+import { useSync } from '@/components/SyncProvider';
 import { createDoc, db, peekNumber, updateDoc } from '@/lib/db';
 import { useBusiness, useCustomers, useItems } from '@/lib/hooks';
 import { balanceDue, buildDocPayload, statusFor, type DocInput } from '@/lib/build';
@@ -59,6 +60,7 @@ function Editor() {
   const business = useBusiness();
   const customers = useCustomers();
   const items = useItems();
+  const sync = useSync();
 
   const [form, setForm] = useState<DocInput | null>(null);
   const [existing, setExisting] = useState<Doc | null>(null);
@@ -204,6 +206,8 @@ function Editor() {
       saved = { ...existing, ...draft, id: existing.id, number: existing.number, seq: existing.seq, fy: existing.fy, createdAt: existing.createdAt };
       await updateDoc(saved);
     } else {
+      // pick up invoices issued on other devices first, so the number we hand out is really the next one
+      await sync.pullLatest();
       saved = await createDoc(draft, business);
       if (input.type === 'payment_receipt' && input.convertedFrom) {
         const src = await db.docs.get(input.convertedFrom);

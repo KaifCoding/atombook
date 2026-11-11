@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "tsx tests/run.ts",
+    "test": "tsx tests/run.ts && tsx tests/sync.ts",
     "typecheck": "tsc --noEmit",
     "electron": "npm run build && electron .",
     "electron:win": "npm run build && electron-builder --win",
@@ -60,7 +60,7 @@
     "deb": {
       "artifactName": "Atombook-${version}-${arch}.${ext}"
     },
-    "copyright": "Copyright © 2026 Mohammad Kaif"
+    "copyright": "Copyright \u00a9 2026 Mohammad Kaif"
   },
   "dependencies": {
     "@capacitor/browser": "^8.0.5",
@@ -89,6 +89,7 @@
     "autoprefixer": "^10.6.2",
     "electron": "^45.2.1",
     "electron-builder": "^26.18.0",
+    "fake-indexeddb": "^6.2.8",
     "png-to-ico": "^3.0.2",
     "postcss": "^8.5.32",
     "sharp": "^0.35.5",

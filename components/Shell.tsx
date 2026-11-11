@@ -4,6 +4,7 @@ import { BarChart3, FileText, LayoutDashboard, Package, Palette, Plus, Settings,
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SyncBadge } from '@/components/SyncUi';
 import { APP_VERSION, UpdateBanner } from '@/components/UpdateBanner';
 import { ToastHost } from '@/components/ui';
 import { useBusiness } from '@/lib/hooks';
@@ -52,13 +53,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="px-5 py-4 text-[11px] text-gray-400">
-          Data stays on this device. Back up from Settings.
+          <div className="mb-2"><SyncBadge /></div>
+          Works offline. Back up from Settings.
           {APP_VERSION && <div className="mt-1">AtomBook v{APP_VERSION}</div>}
         </div>
       </aside>
 
       <main className="min-w-0 flex-1 px-4 pb-24 pt-5 md:px-8 md:pb-10">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-3 flex justify-end md:hidden"><SyncBadge compact /></div>
+          {children}
+        </div>
       </main>
 
       <ToastHost />

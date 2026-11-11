@@ -38,9 +38,10 @@ export default function DesignPage() {
   const [useReal, setUseReal] = useState(false);
   const [blob, setBlob] = useState<Blob | null>(null);
 
+  // Show data that arrives from another device (Google Drive sync), unless the user is mid-edit.
   useEffect(() => {
-    if (saved && !d) setD(saved);
-  }, [saved, d]);
+    if (saved && (!d || (!dirty && saved.updatedAt !== d.updatedAt))) setD(saved);
+  }, [saved, d, dirty]);
 
   const sample: Doc | null = useMemo(() => {
     if (!business) return null;

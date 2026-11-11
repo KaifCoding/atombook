@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Empty, Field, Modal, PageHeader, toast } from '@/components/ui';
-import { db } from '@/lib/db';
+import { db, deleteItem } from "@/lib/db";
 import { useItems } from '@/lib/hooks';
 import { fmtMoney, GST_RATES, UNITS } from '@/lib/gst';
 import type { Item } from '@/lib/types';
@@ -38,7 +38,7 @@ export default function ItemsPage() {
 
   const remove = async (it: Item) => {
     if (!window.confirm(`Delete ${it.name}? Existing documents keep their copy of the item.`)) return;
-    await db.items.delete(it.id!);
+    await deleteItem(it.id!);
   };
 
   return (

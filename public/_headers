@@ -1,0 +1,13 @@
+# Used by Netlify and Cloudflare Pages.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Google sign-in opens a popup that talks back to this page
+  Cross-Origin-Opener-Policy: same-origin-allow-popups

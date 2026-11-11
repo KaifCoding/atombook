@@ -67,6 +67,7 @@ export interface BankDetails {
 
 export interface Business {
   id: 1;
+  updatedAt?: number; // set automatically; used by Drive sync
   name: string;
   tagline: string;
   address: string;
@@ -97,6 +98,7 @@ export interface Business {
 
 export interface Customer {
   id?: number;
+  updatedAt?: number; // set automatically; used by Drive sync
   name: string;
   gstin: string;
   address: string;
@@ -110,6 +112,7 @@ export type ItemKind = 'goods' | 'service';
 
 export interface Item {
   id?: number;
+  updatedAt?: number; // set automatically; used by Drive sync
   name: string;
   description: string;
   kind: ItemKind;
@@ -217,6 +220,7 @@ export type TemplateId = 'classic' | 'modern' | 'minimal';
 
 export interface DesignConfig {
   id: 1;
+  updatedAt?: number; // set automatically; used by Drive sync
   template: TemplateId;
   accent: string;
   fontFamily: 'NotoSans' | 'Helvetica' | 'Times-Roman';

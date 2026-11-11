@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Empty, Field, Modal, PageHeader, StateSelect, toast } from '@/components/ui';
-import { db } from '@/lib/db';
+import { db, deleteCustomer } from "@/lib/db";
 import { useCustomers } from '@/lib/hooks';
 import { isValidGstin, stateFromGstin } from '@/lib/gst';
 import { stateName } from '@/lib/states';
@@ -31,7 +31,7 @@ export default function CustomersPage() {
 
   const remove = async (c: Customer) => {
     if (!window.confirm(`Delete ${c.name}? Existing documents keep their copy of the details.`)) return;
-    await db.customers.delete(c.id!);
+    await deleteCustomer(c.id!);
   };
 
   const gstinBad = !!editing?.gstin && !isValidGstin(editing.gstin);
