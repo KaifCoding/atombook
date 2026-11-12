@@ -10,3 +10,7 @@ android/key.properties
 android/app/release-key.jks
 release-key.jks
 .env
+.env.local
+.env.production
+*.jks
+key.properties

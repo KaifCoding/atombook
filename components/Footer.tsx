@@ -1,4 +1,5 @@
-import { Camera, Globe, Star } from "lucide-react";
+import { Camera, Globe, ShieldCheck, Star } from "lucide-react";
+import Link from "next/link";
 export default function Footer() {
   const LINKS = {
     company: "Atomprod",
@@ -45,6 +46,9 @@ export default function Footer() {
         >
           <Globe size={14} /> Website
         </a>
+        <Link href="/privacy/" className="btn-ghost btn-sm">
+          <ShieldCheck size={14} /> Privacy
+        </Link>
       </div>
     </footer>
   );

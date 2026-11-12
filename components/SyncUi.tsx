@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 import { Field } from '@/components/ui';
 import { useSync } from '@/components/SyncProvider';
 
-const PLATFORM_NAME = { web: 'site', desktop: 'app', android: 'app', unsupported: 'app' } as const;
 const CLIENT_TYPE = { web: 'Web application', desktop: 'Desktop app', android: 'Android', unsupported: '' } as const;
-const GUIDE = 'https://github.com/KaifCoding/atombook/blob/main/ONLINE-SETUP.md';
+const GUIDE = 'https://github.com/KaifCoding/atombook/blob/main/SYNC-GUIDE.md';
+const PRIVACY = '/privacy/';
 
 export function timeAgo(ms: number | undefined, now = Date.now()): string {
   if (!ms) return 'never';
@@ -111,31 +111,30 @@ export function SyncPanel() {
 
       {s.phase === 'unconfigured' && (
         <div>
-          <p className="mb-3 text-xs text-gray-500">
-            Sync keeps a copy of your data in a hidden folder of your own Google Drive that only AtomBook can open. To switch it on, this {PLATFORM_NAME[s.platform]} needs a Google OAuth Client ID
-            (a one-time setup).{' '}
-            <a className="inline-flex items-center gap-0.5 text-brand-600 underline" href={GUIDE} target="_blank" rel="noopener noreferrer">
-              Setup guide <ExternalLink size={11} />
-            </a>
+          <p className="text-xs text-gray-500">
+            Google Drive sync is not switched on in this version yet. Please update AtomBook, or write to{' '}
+            <a className="text-brand-600 underline" href="mailto:kaif@atomprod.in">kaif@atomprod.in</a>. Everything else works normally, and you can move data between devices with a backup file.
           </p>
-          <Field
-            label={`Google OAuth Client ID (${CLIENT_TYPE[s.platform]})`}
-            hint="Looks like 123456-abc.apps.googleusercontent.com. Stored on this device only. App publishers can bake it into the build instead."
-          >
-            <input className="input" value={draftId} onChange={(e) => setDraftId(e.target.value)} placeholder="…apps.googleusercontent.com" />
-          </Field>
-          {s.platform === 'desktop' && (
-            <Field label="Client secret" hint="Google issues one for Desktop clients. It is not confidential for installed apps.">
-              <input className="input" value={draftSecret} onChange={(e) => setDraftSecret(e.target.value)} placeholder="GOCSPX-…" />
-            </Field>
-          )}
-          <button
-            className="btn-primary mt-2"
-            disabled={!draftId.trim().endsWith('.apps.googleusercontent.com') || (s.platform === 'desktop' && !draftSecret.trim())}
-            onClick={() => s.saveCredentials({ clientId: draftId, clientSecret: draftSecret })}
-          >
-            Save
-          </button>
+          <details className="mt-3 text-xs text-gray-500">
+            <summary className="cursor-pointer select-none">Advanced: enter a Google Client ID (self-hosting only)</summary>
+            <div className="mt-2">
+              <Field label={`Google OAuth Client ID (${CLIENT_TYPE[s.platform]})`} hint="Only needed if you host AtomBook yourself.">
+                <input className="input" value={draftId} onChange={(e) => setDraftId(e.target.value)} placeholder="…apps.googleusercontent.com" />
+              </Field>
+              {s.platform === 'desktop' && (
+                <Field label="Client secret">
+                  <input className="input" value={draftSecret} onChange={(e) => setDraftSecret(e.target.value)} placeholder="GOCSPX-…" />
+                </Field>
+              )}
+              <button
+                className="btn-primary mt-2"
+                disabled={!draftId.trim().endsWith('.apps.googleusercontent.com') || (s.platform === 'desktop' && !draftSecret.trim())}
+                onClick={() => s.saveCredentials({ clientId: draftId, clientSecret: draftSecret })}
+              >
+                Save
+              </button>
+            </div>
+          </details>
         </div>
       )}
 
@@ -222,6 +221,9 @@ export function SyncPanel() {
           </p>
         </div>
       )}
+      <p className="mt-3 text-[11px] text-gray-400">
+        <a className="underline" href={GUIDE} target="_blank" rel="noopener noreferrer">How sync works</a> · <Link className="underline" href={PRIVACY}>Privacy policy</Link>
+      </p>
     </section>
   );
 }

@@ -8,7 +8,7 @@
  */
 const VERSION = 'v1';
 const CACHE = `atombook-${VERSION}`;
-const PAGES = ['/', '/documents/', '/documents/edit/', '/customers/', '/items/', '/reports/', '/design/', '/settings/'];
+const PAGES = ['/', '/documents/', '/documents/edit/', '/customers/', '/items/', '/reports/', '/design/', '/settings/', '/privacy/'];
 const FILES = ['/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/favicon.svg', '/favicon-64.png', '/fonts/NotoSans-Regular.ttf', '/fonts/NotoSans-Bold.ttf', '/pdf.worker.min.mjs'];
 
 self.addEventListener('install', (event) => {

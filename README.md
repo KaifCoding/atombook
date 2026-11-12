@@ -155,8 +155,9 @@ AtomBook is released under the [MIT License](LICENSE).
 Mohammad Kaif, [kaif@atomprod.in](mailto:kaif@atomprod.in)
 
 
-## Online app + Google Drive sync
+## Use it on all your devices
 
-AtomBook can be hosted as a static website (installable, works offline) and sync between your
-phone and computer through a hidden folder in your own Google Drive, with no database or server.
-See [ONLINE-SETUP.md](ONLINE-SETUP.md).
+AtomBook works offline, and you can keep your phone and computer in step through your own Google
+Drive (a hidden folder only AtomBook can open). No account with us and no server.
+Read the [sync guide](SYNC-GUIDE.md) and the [privacy policy](https://atombook.atomprod.in/privacy/).
+Publisher notes: [PUBLISHER-SETUP.md](PUBLISHER-SETUP.md).

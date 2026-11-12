@@ -36,7 +36,7 @@ jobs:
       APP_VERSION: ${{ needs.meta.outputs.version }}
       NEXT_PUBLIC_APP_VERSION: ${{ needs.meta.outputs.version }}
       NEXT_PUBLIC_GH_REPO: ${{ github.repository }}
-      # Google Drive sync client ids (repository Variables, see ONLINE-SETUP.md)
+      # Google Drive sync client ids (repository Variables, see PUBLISHER-SETUP.md)
       NEXT_PUBLIC_GOOGLE_ANDROID_CLIENT_ID: ${{ vars.GOOGLE_ANDROID_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
