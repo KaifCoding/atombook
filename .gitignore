@@ -9,3 +9,4 @@ electron/release.json
 android/key.properties
 android/app/release-key.jks
 release-key.jks
+.env
