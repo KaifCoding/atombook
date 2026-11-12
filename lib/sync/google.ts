@@ -16,7 +16,6 @@ const GIS_SRC = 'https://accounts.google.com/gsi/client';
 
 const LS_TOKEN = 'atombook.google.token';
 const LS_HINT = 'atombook.google.hint';
-export const LS_CLIENT_ID = 'atombook.google.clientId';
 
 interface TokenResponse {
   access_token?: string;
@@ -62,15 +61,6 @@ function lsSet(key: string, value: string | null) {
     /* storage blocked: the app still works, just asks more often */
   }
 }
-
-/** Client ID set at build time, or pasted by the owner in Settings. */
-export function getClientId(): string {
-  return (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || lsGet(LS_CLIENT_ID) || '').trim();
-}
-export function setClientId(id: string) {
-  lsSet(LS_CLIENT_ID, id.trim() || null);
-}
-export const clientIdFromBuild = () => !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 let gisPromise: Promise<void> | null = null;
 function loadGis(): Promise<void> {

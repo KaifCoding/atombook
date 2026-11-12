@@ -4,4 +4,4 @@ Please do not publish exploitable vulnerabilities in public issues. Report suspe
 
 Do not share real customer backups, GSTINs, phone numbers, addresses, invoices, signing keys or passwords in reports.
 
-AtomBook is offline-first. Optional Google Drive sync stores data only in a hidden app folder of the user's own Drive (scope `drive.appdata`); the short-lived access token is kept in the browser's localStorage. Users are responsible for protecting their devices and keeping encrypted backups in a safe location.
+AtomBook is offline-first. Optional Google Drive sync stores data only in a hidden app folder of the user's own Drive (scope `drive.appdata`); on the web the short-lived access token is kept in localStorage; the desktop app keeps its refresh token in the main process, encrypted with the OS keystore; the Android app keeps it in app-private storage. Users are responsible for protecting their devices and keeping encrypted backups in a safe location.

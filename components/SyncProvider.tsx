@@ -8,7 +8,7 @@ import { saveJson } from '@/lib/files';
 import { todayStr } from '@/lib/gst';
 import { AuthRequiredError, DriveStore, NetworkError } from '@/lib/sync/drive';
 import { deleteCloudCopy, type Resolution, runSync, type Summary } from '@/lib/sync/engine';
-import { clientIdFromBuild, getClientId, GoogleAuth, setClientId as storeClientId } from '@/lib/sync/google';
+import { type AuthProvider, createAuth, credentialsFromBuild, type Credentials, detectPlatform, getCredentials, type Platform, setCredentials } from '@/lib/sync/auth';
 
 export type SyncPhase =
   | 'unsupported' // native app shells / insecure origins: no Google sign-in there
@@ -32,8 +32,9 @@ interface SyncApi {
   error: string;
   account: string;
   lastSyncAt: number | undefined;
-  clientId: string;
-  clientIdFromBuild: boolean;
+  platform: Platform;
+  credentials: Credentials;
+  credentialsFromBuild: boolean;
   /** Sign in (must be called from a click) and start syncing. */
   connect(): Promise<void>;
   disconnect(): Promise<void>;
@@ -41,7 +42,7 @@ interface SyncApi {
   /** Best effort: fetch other devices' changes before doing something that uses numbering. */
   pullLatest(timeoutMs?: number): Promise<void>;
   deleteCloud(): Promise<void>;
-  saveClientId(id: string): void;
+  saveCredentials(c: Credentials): void;
 }
 
 const Ctx = createContext<SyncApi | null>(null);
@@ -71,15 +72,6 @@ const lsSet = (k: string, v: string | null) => {
   }
 };
 
-/** Google sign-in only works from a real web origin, not inside the Android / desktop shells. */
-function environmentSupported(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (!/^https?:$/.test(location.protocol)) return false; // Electron app://, file://
-  if (!window.isSecureContext) return false;
-  const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-  return !cap?.isNativePlatform?.();
-}
-
 function deviceName(): string {
   const ua = navigator.userAgent;
   const os = /Android/i.test(ua) ? 'Android' : /iPhone|iPad|iPod/i.test(ua) ? 'iPhone' : /Windows/i.test(ua) ? 'Windows' : /Mac OS/i.test(ua) ? 'Mac' : /Linux/i.test(ua) ? 'Linux' : 'Device';
@@ -90,8 +82,8 @@ function deviceName(): string {
 const describe = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong while syncing.');
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
-  const [supported, setSupported] = useState(true); // corrected after mount; keeps the static HTML and first render identical
-  const [clientId, setClientIdState] = useState('');
+  const [platform, setPlatform] = useState<Platform>('web'); // corrected after mount; keeps the static HTML and first render identical
+  const [credentials, setCredentialsState] = useState<Credentials>({ clientId: '' });
   const [enabled, setEnabled] = useState(false);
   const [phase, setPhase] = useState<SyncPhase>('off');
   const [error, setError] = useState('');
@@ -101,7 +93,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const lastSyncAt = useLiveQuery(async () => (await db.meta.get('lastSyncAt'))?.value as number | undefined, []);
 
-  const authRef = useRef<GoogleAuth | null>(null);
+  const authRef = useRef<AuthProvider | null>(null);
   const chain = useRef<Promise<unknown>>(Promise.resolve());
   const authFailed = useRef(false);
   const dirtyDuringRun = useRef(false);
@@ -113,14 +105,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   /* ---------- environment ---------- */
   useEffect(() => {
-    const ok = environmentSupported();
-    setSupported(ok);
-    const id = getClientId();
-    setClientIdState(id);
+    const p = detectPlatform();
+    setPlatform(p);
+    const cred = getCredentials(p);
+    setCredentialsState(cred);
     setAccount(lsGet(LS_ACCOUNT) || '');
-    if (!ok) return setPhase('unsupported');
-    if (!id) return setPhase('unconfigured');
-    authRef.current = new GoogleAuth(id);
+    if (p === 'unsupported') return setPhase('unsupported');
+    if (!cred.clientId) return setPhase('unconfigured');
+    authRef.current = createAuth(p, cred);
     if (lsGet(LS_ENABLED) === '1') {
       setEnabled(true);
       setPhase('idle');
@@ -298,13 +290,16 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     [execute],
   );
 
-  const saveClientId = useCallback((id: string) => {
-    storeClientId(id);
-    const v = getClientId();
-    setClientIdState(v);
-    authRef.current = v ? new GoogleAuth(v) : null;
-    setPhase(v ? 'off' : 'unconfigured');
-  }, []);
+  const saveCredentials = useCallback(
+    (c: Credentials) => {
+      setCredentials(platform, c);
+      const cred = getCredentials(platform);
+      setCredentialsState(cred);
+      authRef.current = createAuth(platform, cred);
+      setPhase(cred.clientId ? 'off' : 'unconfigured');
+    },
+    [platform],
+  );
 
   const resolve = async (choice: Resolution) => {
     const msg =
@@ -323,20 +318,21 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const api = useMemo<SyncApi>(
     () => ({
-      phase: supported ? phase : 'unsupported',
+      phase,
       error,
       account,
       lastSyncAt,
-      clientId,
-      clientIdFromBuild: clientIdFromBuild(),
+      platform,
+      credentials,
+      credentialsFromBuild: credentialsFromBuild(platform),
       connect,
       disconnect,
       syncNow,
       pullLatest,
       deleteCloud,
-      saveClientId,
+      saveCredentials,
     }),
-    [supported, phase, error, account, lastSyncAt, clientId, connect, disconnect, syncNow, pullLatest, deleteCloud, saveClientId],
+    [platform, phase, error, account, lastSyncAt, credentials, connect, disconnect, syncNow, pullLatest, deleteCloud, saveCredentials],
   );
 
   return (
