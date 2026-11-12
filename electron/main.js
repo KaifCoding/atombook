@@ -1,9 +1,10 @@
 // Electron shell: serves the static Next.js export from out/ over a custom
 // app:// origin so absolute asset paths, IndexedDB and the PDF worker all work offline.
-const { app, BrowserWindow, protocol, net, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, protocol, net, Menu, shell, dialog, ipcMain, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
+const { createAuth } = require('./google-auth');
 
 const OUT = path.join(__dirname, '..', 'out');
 
@@ -87,7 +88,7 @@ function createWindow() {
     title: 'AtomBook',
     icon: path.join(__dirname, 'icon.png'),
     backgroundColor: '#f8fafc',
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(__dirname, 'preload.js') },
   });
   Menu.setApplicationMenu(null);
   setupUpdates(win);
@@ -100,6 +101,33 @@ function createWindow() {
     return { action: 'deny' };
   });
 }
+
+// Google Drive sync sign-in. The refresh token is encrypted with the OS keystore (Windows DPAPI,
+// macOS Keychain, Linux libsecret) and kept in the main process only. Without OS encryption it is
+// not saved at all, so the user simply signs in again next launch.
+const tokenStore = {
+  file: () => path.join(app.getPath('userData'), 'google-auth.bin'),
+  load() {
+    try {
+      if (!safeStorage.isEncryptionAvailable()) return null;
+      return safeStorage.decryptString(fs.readFileSync(this.file()));
+    } catch { return null; }
+  },
+  save(token) {
+    try {
+      if (safeStorage.isEncryptionAvailable()) fs.writeFileSync(this.file(), safeStorage.encryptString(token), { mode: 0o600 });
+    } catch { /* not persisted */ }
+  },
+  clear() { try { fs.rmSync(this.file(), { force: true }); } catch { /* ignore */ } },
+};
+const googleAuth = createAuth({ fetch: (...a) => net.fetch(...a), openExternal: (url) => shell.openExternal(url), store: tokenStore });
+// Node's URL gives custom schemes the origin "null", so compare protocol and host.
+const fromApp = (e) => { try { const u = new URL(e.senderFrame.url); return u.protocol === 'app:' && u.host === 'billbook'; } catch { return false; } };
+const guard = (fn) => (e, ...args) => (fromApp(e) ? fn(...args) : { ok: false, code: 'error', message: 'Not allowed.' });
+ipcMain.handle('google-auth:sign-in', guard((cfg) => googleAuth.signIn(cfg || {})));
+ipcMain.handle('google-auth:token', guard((cfg) => googleAuth.getToken(cfg || {})));
+ipcMain.handle('google-auth:sign-out', guard(() => googleAuth.signOut()));
+ipcMain.handle('google-auth:has', guard(() => googleAuth.hasSignedIn()));
 
 app.whenReady().then(() => {
   protocol.handle('app', (req) => net.fetch(pathToFileURL(resolveFile(new URL(req.url).pathname)).toString()));

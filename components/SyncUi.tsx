@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { Field } from '@/components/ui';
 import { useSync } from '@/components/SyncProvider';
 
+const PLATFORM_NAME = { web: 'site', desktop: 'app', android: 'app', unsupported: 'app' } as const;
+const CLIENT_TYPE = { web: 'Web application', desktop: 'Desktop app', android: 'Android', unsupported: '' } as const;
 const GUIDE = 'https://github.com/KaifCoding/atombook/blob/main/ONLINE-SETUP.md';
 
 export function timeAgo(ms: number | undefined, now = Date.now()): string {
@@ -93,6 +95,7 @@ export function SyncPanel() {
   const s = useSync();
   useTick();
   const [draftId, setDraftId] = useState('');
+  const [draftSecret, setDraftSecret] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const connected = s.phase !== 'off' && s.phase !== 'unsupported' && s.phase !== 'unconfigured';
 
@@ -102,28 +105,37 @@ export function SyncPanel() {
 
       {s.phase === 'unsupported' && (
         <p className="text-xs text-gray-500">
-          Sync needs the online version of AtomBook (open it in your browser, or install it from the browser menu). The installed Android and desktop apps keep their data on the
-          device only: use the backup file to move data between them.
+          Google Drive sync is not available here. It needs the Android app, the Windows/Linux app, or AtomBook opened in a browser over https.
         </p>
       )}
 
       {s.phase === 'unconfigured' && (
         <div>
           <p className="mb-3 text-xs text-gray-500">
-            Sync keeps a copy of your data in a hidden folder of your own Google Drive that only AtomBook can open. To switch it on, this site needs a Google OAuth Client ID
-            (a one-time, 5 minute setup).{' '}
+            Sync keeps a copy of your data in a hidden folder of your own Google Drive that only AtomBook can open. To switch it on, this {PLATFORM_NAME[s.platform]} needs a Google OAuth Client ID
+            (a one-time setup).{' '}
             <a className="inline-flex items-center gap-0.5 text-brand-600 underline" href={GUIDE} target="_blank" rel="noopener noreferrer">
               Setup guide <ExternalLink size={11} />
             </a>
           </p>
-          <Field label="Google OAuth Client ID" hint="Looks like 123456-abc.apps.googleusercontent.com. Stored in this browser only. Site owners can set NEXT_PUBLIC_GOOGLE_CLIENT_ID at build time instead.">
-            <div className="flex gap-2">
-              <input className="input" value={draftId} onChange={(e) => setDraftId(e.target.value)} placeholder="…apps.googleusercontent.com" />
-              <button className="btn-primary" disabled={!draftId.trim().endsWith('.apps.googleusercontent.com')} onClick={() => s.saveClientId(draftId)}>
-                Save
-              </button>
-            </div>
+          <Field
+            label={`Google OAuth Client ID (${CLIENT_TYPE[s.platform]})`}
+            hint="Looks like 123456-abc.apps.googleusercontent.com. Stored on this device only. App publishers can bake it into the build instead."
+          >
+            <input className="input" value={draftId} onChange={(e) => setDraftId(e.target.value)} placeholder="…apps.googleusercontent.com" />
           </Field>
+          {s.platform === 'desktop' && (
+            <Field label="Client secret" hint="Google issues one for Desktop clients. It is not confidential for installed apps.">
+              <input className="input" value={draftSecret} onChange={(e) => setDraftSecret(e.target.value)} placeholder="GOCSPX-…" />
+            </Field>
+          )}
+          <button
+            className="btn-primary mt-2"
+            disabled={!draftId.trim().endsWith('.apps.googleusercontent.com') || (s.platform === 'desktop' && !draftSecret.trim())}
+            onClick={() => s.saveCredentials({ clientId: draftId, clientSecret: draftSecret })}
+          >
+            Save
+          </button>
         </div>
       )}
 
@@ -136,8 +148,11 @@ export function SyncPanel() {
           <button className="btn-primary" onClick={() => void s.connect()}>
             <Cloud size={16} /> Connect Google Drive
           </button>
-          {!s.clientIdFromBuild && s.clientId && (
-            <button className="ml-2 text-xs text-gray-500 underline" onClick={() => s.saveClientId('')}>
+          {s.platform !== 'web' && (
+            <p className="mt-2 text-[11px] text-gray-400">Google sign-in opens in your browser, then brings you back here.</p>
+          )}
+          {!s.credentialsFromBuild && s.credentials.clientId && (
+            <button className="ml-2 text-xs text-gray-500 underline" onClick={() => s.saveCredentials({ clientId: '', clientSecret: '' })}>
               Change Client ID
             </button>
           )}

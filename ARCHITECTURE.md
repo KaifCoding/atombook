@@ -23,3 +23,8 @@ other devices' files into IndexedDB (newest `updatedAt` wins, tombstones record 
 and `components/SyncProvider.tsx` runs it (on start, focus, online, every 60 s, 3 s after edits).
 Dexie hooks in `lib/db.ts` stamp `updatedAt` and create time-based ids so devices never collide.
 Schema v2 adds the local-only `tombstones` and `meta` tables. Tests: `tests/sync.ts`.
+
+Sign-in per platform (`lib/sync/auth.ts`): web uses Google Identity Services; the Windows/Linux app
+uses `electron/google-auth.js` (system browser, PKCE, loopback redirect, tokens in the main process,
+`electron/preload.js` bridge); Android uses `lib/sync/android.ts` (Custom Tab, PKCE, deep link
+`in.atomprod.atombook:/oauth2redirect`). Tests: `tests/desktop-auth.ts`, `tests/android-auth.ts`.
